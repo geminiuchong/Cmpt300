@@ -194,15 +194,10 @@ void handle_command(char **args, char **theme_color) {
                 printf("%sInvalid syntax: multiple '=' characters\n", *theme_color);
                 return;
             }
-        }
-        // Check if spaces around '='
-        else if (args[1] != NULL && strcmp(args[1], "=") == 0 && args[2] != NULL) {
-            printf("%sVariable value expected\n", *theme_color);
-            return;
-        }
 
-        if (value == NULL) {
-            printf("%sVariable name and value expected\n", *theme_color);
+        } else { // Check if spaces around '='
+        
+            printf("%sVariable value expected\n", *theme_color);
             return;
         }
 
@@ -284,6 +279,7 @@ int main(int argc, char *argv[]) {
         input = fopen(argv[1], "r");
         if (input == NULL) {
             fprintf(stderr, "Unable to read script file: %s\n", argv[1]);
+            free(theme_color);
             return EXIT_FAILURE;
         }
     }
