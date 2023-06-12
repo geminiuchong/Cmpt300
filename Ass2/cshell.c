@@ -1,5 +1,3 @@
-
-//#include "cshell.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -159,8 +157,8 @@ char* handle_theme(char **args) {
     }
 }
 
-void handle_command(char **args, char **theme_color) {
-    // Store the command
+// Function to store the command
+void store_command(char **args, char **theme_color) {
     if (command_count < MAX_COMMANDS) {
         char *command_line = strdup(args[0]);
         for (int i = 1; args[i] != NULL; i++) {
@@ -175,6 +173,12 @@ void handle_command(char **args, char **theme_color) {
     } else {
         printf("%sError: Maximum number of commands reached.\n", *theme_color);
     }
+}
+
+//Function to handle built-in and non built-in commands
+void handle_command(char **args, char **theme_color) {
+    // Store the command
+    store_command(args, theme_color);
 
     // Check if the command is to set an environment variable
     if (args[0][0] == '$') {
@@ -261,7 +265,6 @@ void handle_command(char **args, char **theme_color) {
                 buffer[nbytes] = '\0';
                 printf("%s%s\033[0m", *theme_color, buffer); // Print the output with the theme color
             }
-
             close(pipefd[0]);
         }
     }
@@ -313,6 +316,8 @@ int main(int argc, char *argv[]) {
         // Free the arguments
         free(args);
     }
+
+    printf("\033[0m");
 
     free(theme_color);
 
