@@ -2,10 +2,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <ctype.h>
 #include <unistd.h>
 #include <sys/wait.h>
 
 #define MAX_LINE 80
+
+#define __NR_uppercase 548  // The system call number
+
+long uppercase_syscall(char *str) {
+    return syscall(__NR_uppercase, str);
+}
 
 typedef struct{
     char *name;
@@ -81,7 +88,7 @@ void set_env_var(char *name, char *value) {
 }
 
 // Function to get the value of an environment variable
-char *get_env_var(char *name) {
+char *get_env_var(char *name, char *theme_color) {
     // Check if the variable exists
     for (int i = 0; i < env_var_count; i++) {
         if (strcmp(env_vars[i].name, name) == 0) {
@@ -91,7 +98,7 @@ char *get_env_var(char *name) {
     }
 
     // If the variable does not exist, print an error message and return NULL
-    printf("Error: No Environment Variable $%s found.", name);
+    printf("%sError: No Environment Variable $%s found.", theme_color ,name);
     return NULL;
 }
 
@@ -123,7 +130,7 @@ void handle_print(char **args, char *theme_color) {
     while (args[i]) {
         if (args[i][0] == '$') {
             // Print the value of the environment variable
-            char *value = get_env_var(args[i] + 1); 
+            char *value = get_env_var(args[i] + 1, theme_color); 
             if (value) {
                 printf("%s%s", theme_color, value);
             }
@@ -156,6 +163,7 @@ char* handle_theme(char **args) {
         return strdup("\033[0m");  // Default color
     }
 }
+
 
 // Function to store the command
 void store_command(char **args, char **theme_color) {
@@ -195,6 +203,11 @@ void handle_command(char **args, char **theme_color) {
                 return;
             }
 
+            if (!isalnum(name[strlen(name)-1])){
+                printf("%sInvalid syntax: %c= is not a valid syntax\n", *theme_color, name[strlen(name)-1]);
+                return;
+            }
+
         } else { // Check if spaces around '='
         
             printf("%sVariable value expected\n", *theme_color);
@@ -212,11 +225,23 @@ void handle_command(char **args, char **theme_color) {
         *theme_color = handle_theme(args);
     } else if (strcmp(args[0], "log") == 0) {
         handle_log(args, *theme_color);
-    }else {
+    } else if (strcmp(args[0], "uppercase") == 0) {
+        if (args[1] == NULL) {
+            printf("%sError: No arguments passed\n", *theme_color);
+            return;
+        }
+        char str[MAX_LINE];
+        strncpy(str, args[1], MAX_LINE);
+        if (uppercase_syscall(str) == 0) {
+            printf("%s%s\n\033[0m", *theme_color, str);
+        } else {
+            printf("%sError: System call failed\n\033[0m", *theme_color);
+        }
+    } else {
         // Replace arguments that start with '$' with the value of the environment variable
         for (int i = 0; args[i] != NULL; i++) {
             if (args[i][0] == '$') {
-                char *value = get_env_var(args[i] + 1);
+                char *value = get_env_var(args[i] + 1, *theme_color);
                 if (value) {
                     args[i] = value;
                 }
