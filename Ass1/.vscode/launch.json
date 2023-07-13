@@ -8,8 +8,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": false,
-      "cwd": "/home/uch/Documents/cmpt300/Ass1",
-      "program": "/home/uch/Documents/cmpt300/Ass1/build/Debug/outDebug",
+      "cwd": "/home/alice/Cmpt300/Ass1",
+      "program": "/home/alice/Cmpt300/Ass1/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
