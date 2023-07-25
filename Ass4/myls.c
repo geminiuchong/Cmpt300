@@ -73,26 +73,6 @@ void list_files(const char* dir_name, int i_option, int l_option, int R_option) 
         qsort(dir_array, n, sizeof(*dir_array), compare_dirent);
 
         // First pass: Process the sorted directory entries for files and directories
-        // for (int i = 0; i < n; i++) {
-        //     struct dirent *dir = dir_array[i];
-
-        //     if(ignore_file(dir->d_name)) {
-        //         continue;
-        //     }
-
-        //     snprintf(path, sizeof(path), "%s/%s", dir_name, dir->d_name);
-        //     stat(path, &file_stat);
-
-        //     if (i_option) {
-        //         printf("%-10lu ", dir->d_ino);
-        //     }
-
-        //     if (l_option) {
-        //         print_stat_info(file_stat);
-        //     }
-            
-        //     printf("%-s\n", dir->d_name);
-        // }
         for (int i = 0; i < n; i++) {
             struct dirent *dir = dir_array[i];
 
@@ -139,13 +119,29 @@ void list_files(const char* dir_name, int i_option, int l_option, int R_option) 
     }
 }
 
-
 int main(int argc, char** argv) {
     int i_option = 0;
     int l_option = 0;
     int R_option = 0;
     char* dir_name = ".";
     int opt;
+    
+    // Check for unsupported options
+    for (int i = 1; i < argc; i++) {
+        if (argv[i][0] == '-' && strpbrk(argv[i], "ilR") == NULL) {
+            fprintf(stderr, "Error: Unsupported Option\n");
+            fprintf(stderr, "Usage: %s [-ilR] [file...]\n", argv[0]);
+            exit(EXIT_FAILURE);
+        }
+
+        // Check for long options (start with --)
+        if (argv[i][0] == '-' && argv[i][1] == '-') {
+            fprintf(stderr, "Error: Unsupported Option\n");
+            fprintf(stderr, "Usage: %s [-ilR] [file...]\n", argv[0]);
+            exit(EXIT_FAILURE);
+        }
+    }
+
     while ((opt = getopt(argc, argv, "ilR")) != -1) {
         switch (opt) {
             case 'i':
@@ -162,9 +158,52 @@ int main(int argc, char** argv) {
                 exit(EXIT_FAILURE);
         }
     }
+
     if (optind < argc) {
         dir_name = argv[optind];
     }
+
+    DIR *dir = opendir(dir_name);
+    if (dir) {
+        closedir(dir);  // If the directory exists, close it here. It will be reopened in list_files.
+    } else {
+        fprintf(stderr, "Error: Nonexistent files or directories\n");
+        exit(EXIT_FAILURE);
+    }
+
     list_files(dir_name, i_option, l_option, R_option);
     return 0;
 }
+
+
+
+
+
+// int main(int argc, char** argv) {
+//     int i_option = 0;
+//     int l_option = 0;
+//     int R_option = 0;
+//     char* dir_name = ".";
+//     int opt;
+//     while ((opt = getopt(argc, argv, "ilR")) != -1) {
+//         switch (opt) {
+//             case 'i':
+//                 i_option = 1;
+//                 break;
+//             case 'l':
+//                 l_option = 1;
+//                 break;
+//             case 'R':
+//                 R_option = 1;
+//                 break;
+//             default:
+//                 fprintf(stderr, "Usage: %s [-ilR] [file...]\n", argv[0]);
+//                 exit(EXIT_FAILURE);
+//         }
+//     }
+//     if (optind < argc) {
+//         dir_name = argv[optind];
+//     }
+//     list_files(dir_name, i_option, l_option, R_option);
+//     return 0;
+// }
