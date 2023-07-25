@@ -22,6 +22,7 @@ void print_stat_info(struct stat file_stat) {
     printf((file_stat.st_mode & S_IROTH) ? "r" : "-");
     printf((file_stat.st_mode & S_IWOTH) ? "w" : "-");
     printf((file_stat.st_mode & S_IXOTH) ? "x" : "-");
+    printf("    "); 
     printf(" %-3lu", file_stat.st_nlink);
     printf(" %-8s", getpwuid(file_stat.st_uid)->pw_name);
     printf(" %-8s", getgrgid(file_stat.st_gid)->gr_name);
@@ -174,36 +175,3 @@ int main(int argc, char** argv) {
     list_files(dir_name, i_option, l_option, R_option);
     return 0;
 }
-
-
-
-
-
-// int main(int argc, char** argv) {
-//     int i_option = 0;
-//     int l_option = 0;
-//     int R_option = 0;
-//     char* dir_name = ".";
-//     int opt;
-//     while ((opt = getopt(argc, argv, "ilR")) != -1) {
-//         switch (opt) {
-//             case 'i':
-//                 i_option = 1;
-//                 break;
-//             case 'l':
-//                 l_option = 1;
-//                 break;
-//             case 'R':
-//                 R_option = 1;
-//                 break;
-//             default:
-//                 fprintf(stderr, "Usage: %s [-ilR] [file...]\n", argv[0]);
-//                 exit(EXIT_FAILURE);
-//         }
-//     }
-//     if (optind < argc) {
-//         dir_name = argv[optind];
-//     }
-//     list_files(dir_name, i_option, l_option, R_option);
-//     return 0;
-// }
