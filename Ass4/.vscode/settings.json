@@ -56,6 +56,10 @@
   "C_Cpp_Runner.showCompilationTime": false,
   "C_Cpp_Runner.useLinkTimeOptimization": false,
   "files.associations": {
-    "stdio.h": "c"
+    "stdio.h": "c",
+    "stdlib.h": "c",
+    "dirent.h": "c",
+    "unistd.h": "c",
+    "types.h": "c"
   }
 }
