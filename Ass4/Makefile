@@ -1,5 +1,5 @@
-all:
-	gcc myls.c -g -lm -o myls
+all: 
+		gcc -g -Wall -o myls myls.c
 
 clean:
-	rm myls -rf
+		rm -f myls
