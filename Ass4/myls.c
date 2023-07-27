@@ -13,7 +13,6 @@
 extern int optind;
 
 void print_stat_info(struct stat file_stat) {
-    // Add the condition for symbolic link
     printf((S_ISLNK(file_stat.st_mode)) ? "l" : (S_ISDIR(file_stat.st_mode)) ? "d" : "-");
     printf((file_stat.st_mode & S_IRUSR) ? "r" : "-");
     printf((file_stat.st_mode & S_IWUSR) ? "w" : "-");
@@ -35,11 +34,9 @@ void print_stat_info(struct stat file_stat) {
 }
 
 
-// Comparison function for qsort
 int compare_dirent(const void *a, const void *b) {
     struct dirent *dir_a = *(struct dirent **)a;
     struct dirent *dir_b = *(struct dirent **)b;
-    //return strcasecmp(dir_a->d_name, dir_b->d_name);
     return strcoll(dir_a->d_name, dir_b->d_name);
 }
 
@@ -64,11 +61,11 @@ void list_files(const char* dir_name, int i_option, int l_option, int R_option) 
     struct dirent **dir_array = NULL;
     struct stat file_stat;
     char path[1024];
-    int n = 0;  // Number of directory entries
+    int n = 0;  
     struct stat path_stat;
     stat(dir_name, &path_stat);
 
-    if (S_ISREG(path_stat.st_mode)) { // If the path is a file, print it directly
+    if (S_ISREG(path_stat.st_mode)) { 
         if (i_option) {
             printf("%-10lu ", path_stat.st_ino);
         }
@@ -76,12 +73,12 @@ void list_files(const char* dir_name, int i_option, int l_option, int R_option) 
             print_stat_info(path_stat);
         }
         printf("%-s\n", dir_name);
-        return; // Return early since there's nothing more to do for a file
+        return; 
     }
 
     d = opendir(dir_name);
     if (d) {
-        // Read all the directory entries
+
         while ((dir_array = realloc(dir_array, sizeof(*dir_array) * (n + 1))) && (dir_array[n] = readdir(d)) != NULL) {
             n++;
         }
@@ -89,7 +86,7 @@ void list_files(const char* dir_name, int i_option, int l_option, int R_option) 
         // Sort the directory entries
         qsort(dir_array, n, sizeof(*dir_array), compare_dirent);
 
-        // First pass: Process the sorted directory entries for files and directories
+        // Process the sorted directory entries for files and directories
         for (int i = 0; i < n; i++) {
             struct dirent *dir = dir_array[i];
 
@@ -98,7 +95,7 @@ void list_files(const char* dir_name, int i_option, int l_option, int R_option) 
             }
 
             snprintf(path, sizeof(path), "%s/%s", dir_name, dir->d_name);
-            lstat(path, &file_stat); // Use lstat instead of stat
+            lstat(path, &file_stat); 
 
             if (i_option) {
                 printf("%-10lu ", dir->d_ino);
@@ -108,19 +105,9 @@ void list_files(const char* dir_name, int i_option, int l_option, int R_option) 
                 print_stat_info(file_stat);
             }
 
-            // if (S_ISLNK(file_stat.st_mode)) { // If the file is a symbolic link
-            //     char target[1024];
-            //     ssize_t len = readlink(path, target, sizeof(target) - 1); // Read the file it points to
-            //     if (len != -1) {
-            //         target[len] = '\0';
-            //         printf("%-s -> %-s\n", dir->d_name, target); // Print the name of the symbolic link and the file it points to
-            //     }
-            // } else {
-            //     printf("%-s\n", dir->d_name);
-            // }
             if (l_option && S_ISLNK(file_stat.st_mode)) { // If the l option is set and the file is a symbolic link
                 char target[1024];
-                ssize_t len = readlink(path, target, sizeof(target) - 1); // Read the file it points to
+                ssize_t len = readlink(path, target, sizeof(target) - 1); 
                 if (len != -1) {
                     target[len] = '\0';
                     printf("%-s -> %-s\n", dir->d_name, target); // Print the name of the symbolic link and the file it points to
@@ -131,7 +118,7 @@ void list_files(const char* dir_name, int i_option, int l_option, int R_option) 
 
         }
 
-        // Second pass: Recursively list subdirectories if R_option is true
+        // Recursively list subdirectories if R_option is true
         if (R_option) {
             for (int i = 0; i < n; i++) {
                 struct dirent *dir = dir_array[i];
@@ -141,7 +128,7 @@ void list_files(const char* dir_name, int i_option, int l_option, int R_option) 
                 }
 
                 snprintf(path, sizeof(path), "%s/%s", dir_name, dir->d_name);
-                lstat(path, &file_stat); // Use lstat instead of stat
+                lstat(path, &file_stat); 
 
                 if (S_ISDIR(file_stat.st_mode)) {
                     printf("\n%s:\n", path);
@@ -150,11 +137,6 @@ void list_files(const char* dir_name, int i_option, int l_option, int R_option) 
             }
         }
 
- 
-        // Free the directory entries
-        // for (int i = 0; i < n; i++) {
-        //     free(dir_array[i]);
-        // }
         free(dir_array);
 
         closedir(d);
@@ -162,13 +144,13 @@ void list_files(const char* dir_name, int i_option, int l_option, int R_option) 
 }
 
 int main(int argc, char *argv[]) {
-    setlocale(LC_ALL, "");  // Set the locale to the user's default locale
+    setlocale(LC_ALL, "");
 
     int i_option = 0;
     int l_option = 0;
     int R_option = 0;
     
-    // Check for unsupported options
+
     for (int i = 1; i < argc; i++) {
         if (argv[i][0] == '-' && strpbrk(argv[i], "ilR") == NULL) {
             fprintf(stderr, "Error: Unsupported Option\n");
@@ -176,7 +158,6 @@ int main(int argc, char *argv[]) {
             exit(EXIT_FAILURE);
         }
 
-        // Check for long options (start with --)
         if (argv[i][0] == '-' && argv[i][1] == '-') {
             fprintf(stderr, "Error: Unsupported Option\n");
             fprintf(stderr, "Usage: %s [-i] [-l] [-R] [file...]\n", argv[0]);
@@ -204,44 +185,19 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // Create two lists for directories and files.
+    // Create two lists for directories and files
     char **files = malloc(argc * sizeof(char *));
     char **dirs = malloc(argc * sizeof(char *));
     int files_count = 0;
     int dirs_count = 0;
 
-    // // Pre-check for nonexistent files or directories
-    // struct stat path_stat;
-    // if (optind < argc) {
-    //     for (int i = optind; i < argc; i++) {
-    //         if (stat(argv[i], &path_stat) != 0) {
-    //             fprintf(stderr, "Error : Nonexistent files or directories\n");
-    //             exit(EXIT_FAILURE);
-    //         }
-    //         if (S_ISDIR(path_stat.st_mode)) {
-    //             dirs[dirs_count++] = argv[i];
-    //         } else {
-    //             files[files_count++] = argv[i];
-    //         }
-    //     }
-    // } else {
-    //     if (stat(".", &path_stat) != 0) {
-    //         fprintf(stderr, "Error : Nonexistent files or directories\n");
-    //         exit(EXIT_FAILURE);
-    //     }
-    //     if (S_ISDIR(path_stat.st_mode)) {
-    //         dirs[dirs_count++] = ".";
-    //     } else {
-    //         files[files_count++] = ".";
-    //     }
-    // }
-    // Pre-check for nonexistent files or directories
+
     struct stat path_stat;
     if (optind < argc) {
         for (int i = optind; i < argc; i++) {
             if (lstat(argv[i], &path_stat) != 0) {
                 fprintf(stderr, "Error: Nonexistent file or directory '%s'\n", argv[i]);
-                continue; // Skip this iteration instead of terminating the program
+                continue; 
             }
             if (S_ISDIR(path_stat.st_mode)) {
                 dirs[dirs_count++] = argv[i];
@@ -252,7 +208,7 @@ int main(int argc, char *argv[]) {
     } else {
         if (lstat(".", &path_stat) != 0) {
             fprintf(stderr, "Error: Nonexistent file or directory '.'\n");
-            exit(EXIT_FAILURE); // Here we should exit, because if '.' doesn't exist, we can't continue
+            exit(EXIT_FAILURE); 
         }
         if (S_ISDIR(path_stat.st_mode)) {
             dirs[dirs_count++] = ".";
@@ -269,7 +225,7 @@ int main(int argc, char *argv[]) {
 
     // Then process directories
     for (int i = 0; i < dirs_count; i++) {
-        printf("\n%s:\n", dirs[i]); // <-- printing directory/file header here only if it's a directory
+        printf("\n%s:\n", dirs[i]); 
         list_files(dirs[i], i_option, l_option, R_option);
     }
 
@@ -574,3 +530,29 @@ int main(int argc, char *argv[]) {
 //     }
 //     return *a_name - *b_name;
 // }
+
+    // // Pre-check for nonexistent files or directories
+    // struct stat path_stat;
+    // if (optind < argc) {
+    //     for (int i = optind; i < argc; i++) {
+    //         if (stat(argv[i], &path_stat) != 0) {
+    //             fprintf(stderr, "Error : Nonexistent files or directories\n");
+    //             exit(EXIT_FAILURE);
+    //         }
+    //         if (S_ISDIR(path_stat.st_mode)) {
+    //             dirs[dirs_count++] = argv[i];
+    //         } else {
+    //             files[files_count++] = argv[i];
+    //         }
+    //     }
+    // } else {
+    //     if (stat(".", &path_stat) != 0) {
+    //         fprintf(stderr, "Error : Nonexistent files or directories\n");
+    //         exit(EXIT_FAILURE);
+    //     }
+    //     if (S_ISDIR(path_stat.st_mode)) {
+    //         dirs[dirs_count++] = ".";
+    //     } else {
+    //         files[files_count++] = ".";
+    //     }
+    // }
