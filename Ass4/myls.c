@@ -11,6 +11,7 @@
 #include <locale.h>
 
 extern int optind;
+#define MAX_DEPTH 20
 
 void print_stat_info(struct stat file_stat) {
     printf((S_ISLNK(file_stat.st_mode)) ? "l" : (S_ISDIR(file_stat.st_mode)) ? "d" : "-");
@@ -56,7 +57,11 @@ int ignore_file(const char *d_name) {
     return 0;
 }
 
-void list_files(const char* dir_name, int i_option, int l_option, int R_option) {
+void list_files(const char* dir_name, int i_option, int l_option, int R_option, int depth, int max_depth) {
+    if (depth > max_depth) {
+        printf("Maximum depth reached at directory: %s\n", dir_name);
+        return;
+    }
     DIR *d;
     struct dirent **dir_array = NULL;
     struct stat file_stat;
@@ -132,7 +137,7 @@ void list_files(const char* dir_name, int i_option, int l_option, int R_option) 
 
                 if (S_ISDIR(file_stat.st_mode)) {
                     printf("\n%s:\n", path);
-                    list_files(path, i_option, l_option, R_option);
+                    list_files(path, i_option, l_option, R_option, depth + 1, max_depth);
                 }
             }
         }
@@ -220,13 +225,13 @@ int main(int argc, char *argv[]) {
 
     // Process files first
     for (int i = 0; i < files_count; i++) {
-        list_files(files[i], i_option, l_option, R_option);
+        list_files(files[i], i_option, l_option, R_option, 0, MAX_DEPTH);
     }
 
     // Then process directories
     for (int i = 0; i < dirs_count; i++) {
         printf("\n%s:\n", dirs[i]); 
-        list_files(dirs[i], i_option, l_option, R_option);
+        list_files(dirs[i], i_option, l_option, R_option, 0, MAX_DEPTH);
     }
 
     // Free the allocated lists
